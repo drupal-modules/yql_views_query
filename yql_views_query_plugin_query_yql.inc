@@ -6,11 +6,11 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
   /**
    * Constructor; Create the basic query object and fill with default values.
    */
-  function init($base_table = 'twitter_api', $base_field) {    
+  function init($base_table = 'twitter_api', $base_field, $query_options) {
     module_load_include('inc', 'twitter');
 
-    $this->api_url = variable_get('twitter_views_api_url', 'http://search.twitter.com/search.json');
-    $this->api_method = variable_get('twitter_views_api_method', 'json');    
+    $this->api_url = 'http://query.yahooapis.com/v1/public/yql';
+    $this->api_method = variable_get('twitter_views_api_method', 'json');
   }
 
   /**
@@ -54,7 +54,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    *   Provide a countquery if this is true, otherwise provide a normal query.
    */
   function query($view, $get_count = FALSE) {
-
+/*
     $where = $this->condition_query();
 
     $params = $this->params;
@@ -78,6 +78,8 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     $params = implode('&', $items);
 
     return $params;
+*/
+    return 'SELECT * FROM music.artist.popular';
   }
 
 
@@ -187,7 +189,8 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     }
 
     $view->build_info['query'] = $this->query($view);
-    $view->build_info['count_query'] = $this->query($view, TRUE);
+    //$view->build_info['count_query'] = $this->query($view, TRUE);
+    $view->build_info['count_query'] = 10;
     $view->build_info['query_args'] = $this->get_where_args();
   }
 
@@ -205,19 +208,22 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       $replacements = module_invoke_all('views_query_substitutions', $view);
       $query = str_replace(array_keys($replacements), $replacements, $query);
 
-
-      $url = $this->api_url .'?'. $query;
-
+      // Encode the query into URL friendly format
+      $query = urlencode($query);
+      $format_string = $this->api_method == 'json' ? '&format=json' : '&format=xml';
+      $url = $this->api_url .'?q='. $query . $format_string;
+      
       $start = views_microtime();
 
       $results = drupal_http_request($url, array(), 'GET');
 
+      // @todo fix the failure detection
       if (_twitter_request_failure($results)) {
         return FALSE;
       }
 
       switch ($this->api_method) {
-        case 'atom':
+        case 'xml':
           // Not supported yet.
           return;
         case 'json':
@@ -225,9 +231,9 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
           $results = json_decode($results->data, TRUE);
           break;
       }
-
-      if ($results['results']) {
-        $view->result = $results['results'];
+      
+      if ($results['query']['results']) {
+        $view->result = $results['query']['results'];
 
         // $this->results are arrays.
         foreach ($view->result as $key => $value) {

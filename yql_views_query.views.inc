@@ -14,6 +14,14 @@ function yql_views_query_views_data() {
     'query class' => 'yql_query',
   );
 
+  $data['yql']['string'] = array(
+    'title' => t('String'),
+    'help' => t('The field to be included in the querying of the table.'),
+    'field' => array(
+      'handler' => 'yql_views_query_handler_field',
+    ),
+  );
+
 /*
   $data['twitter_api']['table']['group']  = t('Twitter_API');
 
