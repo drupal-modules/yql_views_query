@@ -6,8 +6,8 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
   /**
    * Constructor; Create the basic query object and fill with default values.
    */
-  function init($base_table = 'yql_ep', $base_field, $options) {    
-    parent::init($base_table, $base_field, $options);        
+  function init($base_table = 'yql_ep', $base_field, $options) {
+    parent::init($base_table, $base_field, $options);
 
     $this->api_url = $this->options['api_url'] ? $this->options['api_url'] : 'http://query.yahooapis.com/v1/public/yql';
     $this->api_method = $this->options['api_method'] ? $this->options['api_method'] : 'json';
@@ -79,19 +79,21 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     }
     $params = implode('&', $items);
 
-    return $params;        
+    return $params;
 */
     $query = '';
 
-    // @todo add the where clauses
-    $where = '';
-    
+    // Add the where clauses
+    $where = $this->condition_query();
     // @todo add the field clauses
-    $fields = '*';    
-
+    $fields = '*';
+    // Add the base table
     $from = $this->options['yql_base'];
 
-    $query = 'SELECT ' . $fields . ' FROM ' . $from;
+    $query = "select $fields from $from";
+    if (!empty($where)) {
+      $query = "$query where $where";
+    }
     return $query;
   }
 
@@ -153,11 +155,11 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
   }
 
   function add_where($group, $clause) {
-      $args = func_get_args();
-      array_shift($args); // ditch $group
-      array_shift($args); // ditch $clause
+    $args = func_get_args();
+    array_shift($args); // ditch $group
+    array_shift($args); // ditch $clause
 
-  // Expand an array of args if it came in.
+    // Expand an array of args if it came in.
     if (count($args) == 1 && is_array(reset($args))) {
       $args = current($args);
     }
@@ -225,9 +227,9 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       $query = urlencode($query);
       $format_string = $this->api_method == 'json' ? '&format=json' : '&format=xml';
       $url = $this->api_url .'?q='. $query . $format_string;
-      
+
       $start = views_microtime();
-      
+
       $results = drupal_http_request($url, array(), 'GET');
 
       // @todo fix the failure detection
@@ -246,7 +248,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
           $results = json_decode($results->data, TRUE);
           break;
       }
-            
+
       if ($results['query']['results']['Artist']) {
         $view->result = $results['query']['results']['Artist'];
 
@@ -258,14 +260,14 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
         $this->execute_time = $this->completed_in;
         $this->items_per_page = $this->results_per_page;
-        
+
         // FIXME
         //$this->total_rows = $this->results_per_page * 2;
         //$this->pager['current_page'] = $this->page -1;
       }
     }
 
-    $view->execute_time = views_microtime() - $start;    
+    $view->execute_time = views_microtime() - $start;
   }
 
   function add_signature(&$view) {
@@ -287,7 +289,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine).",
       array('!identica' => l('Identi.ca', 'http://laconi.ca/trac/wiki/TwitterCompatibleAPI'))),
     );
-    
+
     $form['api_method'] = array(
       '#type' => 'select',
       '#title' => t('API Method'),
@@ -297,14 +299,14 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
         'json' => 'JSON',
       ),
     );
-    
+
     $form['yql_base'] = array(
       '#type' => 'textfield',
       '#title' => t('The base table YQL will be querying from.'),
       '#default_value' => $this->options['yql_base'],
       '#description' => t("A base table that view will be querying by using YQL to. Example: flickr.photos.recent"),
     );
-    
+
     // @todo: add validation for custom open table.
     $form['yql_custom_tables'] = array(
       '#type' => 'textarea',

@@ -6,7 +6,7 @@
  */
 
 /**
- * Advertise the current views api version being used 
+ * Advertise the current views api version being used
  */
 function yql_views_query_views_api() {
   return array(
