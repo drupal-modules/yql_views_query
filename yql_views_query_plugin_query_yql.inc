@@ -6,11 +6,13 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
   /**
    * Constructor; Create the basic query object and fill with default values.
    */
-  function init($base_table = 'twitter_api', $base_field, $query_options) {
-    module_load_include('inc', 'twitter');
+  function init($base_table = 'yql_ep', $base_field, $options) {    
+    parent::init($base_table, $base_field, $options);        
 
-    $this->api_url = 'http://query.yahooapis.com/v1/public/yql';
-    $this->api_method = variable_get('twitter_views_api_method', 'json');
+    $this->api_url = $this->options['api_url'] ? $this->options['api_url'] : 'http://query.yahooapis.com/v1/public/yql';
+    $this->api_method = $this->options['api_method'] ? $this->options['api_method'] : 'json';
+    $this->yql_base = $this->options['yql_base'];
+    $this->yql_custom_tables = $this->options['yql_custom_tables'];
   }
 
   /**
@@ -19,7 +21,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    * @param $where
    *   'where' or 'having'.
    */
-  function condition_query($where = 'where') {    
+  function condition_query($where = 'where') {
     $clauses = array();
     if ($this->$where) {
       foreach ($this->$where as $group => $info) {
@@ -77,9 +79,20 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     }
     $params = implode('&', $items);
 
-    return $params;
+    return $params;        
 */
-    return 'SELECT * FROM music.artist.popular';
+    $query = '';
+
+    // @todo add the where clauses
+    $where = '';
+    
+    // @todo add the field clauses
+    $fields = '*';    
+
+    $from = $this->options['yql_base'];
+
+    $query = 'SELECT ' . $fields . ' FROM ' . $from;
+    return $query;
   }
 
 
@@ -214,13 +227,15 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       $url = $this->api_url .'?q='. $query . $format_string;
       
       $start = views_microtime();
-
+      
       $results = drupal_http_request($url, array(), 'GET');
 
       // @todo fix the failure detection
+      /*
       if (_twitter_request_failure($results)) {
         return FALSE;
       }
+      */
 
       switch ($this->api_method) {
         case 'xml':
@@ -231,14 +246,9 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
           $results = json_decode($results->data, TRUE);
           break;
       }
-      
-      if ($results['query']['results']) {
-        $view->result = $results['query']['results'];
-
-        // $this->results are arrays.
-        foreach ($view->result as $key => $value) {
-          $view->result[$key] = (object) $value;
-        }
+            
+      if ($results['query']['results']['Artist']) {
+        $view->result = $results['query']['results']['Artist'];
 
         // Save the metadata into the object
         unset($results['results']);
@@ -247,7 +257,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
         }
 
         $this->execute_time = $this->completed_in;
-
         $this->items_per_page = $this->results_per_page;
         
         // FIXME
@@ -256,7 +265,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       }
     }
 
-    $view->execute_time = views_microtime() - $start;
+    $view->execute_time = views_microtime() - $start;    
   }
 
   function add_signature(&$view) {
@@ -265,7 +274,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
   function option_definition() {
     $options = parent::option_definition();
-    $options['api_url'] = array('default' => 'http://search.twitter.com/search.json');
+    $options['api_url'] = array('default' => 'http://query.yahooapis.com/v1/public/yql');
 
     return $options;
   }
@@ -275,15 +284,33 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       '#type' => 'textfield',
       '#title' => t('Alternate API URL'),
       '#default_value' => $this->options['api_url'],
-      '#description' => t("A Twitter-compatible microblogging services like !identica can be used insted of Twitter.com by entering the service's API URL here.",
+      '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine).",
       array('!identica' => l('Identi.ca', 'http://laconi.ca/trac/wiki/TwitterCompatibleAPI'))),
     );
-  }
-
-  function options_validate(&$form, &$form_state) {
-  }
-
-  function options_submit(&$form, &$form_state) {
+    
+    $form['api_method'] = array(
+      '#type' => 'select',
+      '#title' => t('API Method'),
+      '#description' => t("The format of the data returned by YQL."),
+      '#default_value' => 'json',
+      '#options' => array(
+        'json' => 'JSON',
+      ),
+    );
+    
+    $form['yql_base'] = array(
+      '#type' => 'textfield',
+      '#title' => t('The base table YQL will be querying from.'),
+      '#default_value' => $this->options['yql_base'],
+      '#description' => t("A base table that view will be querying by using YQL to. Example: flickr.photos.recent"),
+    );
+    
+    // @todo: add validation for custom open table.
+    $form['yql_custom_tables'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Custom open tables.'),
+      '#default_value' => $this->options['yql_custom_tables'],
+      '#description' => t("Add custom table into the YQL Query. Format is the same as specified in YQL: USE (url) as (alias);"),
+    );
   }
 }
-

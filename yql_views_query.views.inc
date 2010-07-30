@@ -5,20 +5,23 @@
  * Implements hook_views_data
  */
 
-function yql_views_query_views_data() {    
+function yql_views_query_views_data() {
   $data['yql']['table']['group'] = t('YQL');  
   
   $data['yql']['table']['base'] = array(    
     'title' => t('YQL Query'),
-    'help' => t('Query from YQL endpoint.'),    
+    'help' => t('Query from YQL endpoint.'),
     'query class' => 'yql_query',
   );
 
   $data['yql']['string'] = array(
-    'title' => t('String'),
-    'help' => t('The field to be included in the querying of the table.'),
+    'title' => t('Column'),
+    'help' => t('The column to be included in the querying of the table.'),
     'field' => array(
-      'handler' => 'yql_views_query_handler_field',
+      'handler' => 'yql_views_query_handler_field',      
+    ),
+    'filter' => array(
+      'handler' => 'yql_views_query_handler_filter',
     ),
   );
 
@@ -126,46 +129,20 @@ function yql_views_query_views_data() {
 /**
  * Implementation of hook_views_handlers().
  */
-/*
 function twitter_views_views_handlers() {
   return array(
     'info' => array(
-      'path' => drupal_get_path('module', 'twitter_views') . '/handlers',
+      'path' => drupal_get_path('module', 'yql_views_query') . '/handlers',
     ),
     'handlers' => array(
       // Fields
-      'twitter_views_handler_field' => array(
+      'yql_views_query_handler_field' => array(
         'parent' => 'views_handler_field'
-      ),
-      'twitter_views_handler_field_source' => array(
-        'parent' => 'twitter_views_handler_field',
-      ),
-
-      'twitter_views_handler_field_markup' => array(
-        'parent' => 'twitter_views_handler_field',
-      ),
-      'twitter_views_handler_field_from_user' => array(
-        'parent' => 'twitter_views_handler_field'
       ),
 
       // Filters
-      'twitter_views_handler_filter' => array(
+      'yql_views_query_handler_filter' => array(
         'parent' => 'views_handler_filter'
-      ),
-      'twitter_views_handler_filter_string' => array(
-        'parent' => 'twitter_views_handler_filter'
-      ),
-      'twitter_views_handler_filter_from_user' => array(
-        'parent' => 'twitter_views_handler_filter'
-      ),
-      'twitter_views_handler_filter_hash' => array(
-        'parent' => 'twitter_views_handler_filter'
-      ),
-      'twitter_views_handler_filter_attitude' => array(
-        'parent' => 'twitter_views_handler_filter'
-      ),
-      'twitter_views_handler_filter_locale' => array(
-        'parent' => 'twitter_views_handler_filter'
       ),
     ),
   );
