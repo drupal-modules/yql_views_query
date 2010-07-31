@@ -85,14 +85,28 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
     // Add the where clauses
     $where = $this->condition_query();
-    // @todo add the field clauses
-    $fields = '*';
+    
+    // Add the field clauses
+    $fields = '';
+    $fields_array = $this->fields;
+    foreach($fields_array as $alias => $field) {
+      if (!empty($fields)) {
+        $fields .= ', ';
+      }
+      $fields .= $field['field'];
+    }
     // Add the base table
     $from = $this->options['yql_base'];
 
+    // Build the query string
     $query = "select $fields from $from";
     if (!empty($where)) {
       $query = "$query where $where";
+    }
+
+    // Add table definitions
+    if (!empty($this->options['yql_custom_tables'])) {
+      $query = $this->options['yql_custom_tables'] . $query;
     }
     return $query;
   }
@@ -266,7 +280,8 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
         //$this->pager['current_page'] = $this->page -1;
       }
     }
-
+dpm($results);
+dpm($url);
     $view->execute_time = views_microtime() - $start;
   }
 
@@ -312,7 +327,91 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       '#type' => 'textarea',
       '#title' => t('Custom open tables.'),
       '#default_value' => $this->options['yql_custom_tables'],
-      '#description' => t("Add custom table into the YQL Query. Format is the same as specified in YQL: USE (url) as (alias);"),
+      '#description' => t("Add custom table into the YQL Query.<br/>Example:" . 'USE \'http://www.datatables.org/delicious/delicious.feeds.popular.xml\' AS delicious.feeds.popular;'),
     );
+  }
+  
+  /**
+   * Add a field to the query table, possibly with an alias. This will
+   * automatically call ensure_table to make sure the required table
+   * exists, *unless* $table is unset.
+   *
+   * @param $table
+   *   The table this field is attached to. If NULL, it is assumed this will
+   *   be a formula; otherwise, ensure_table is used to make sure the
+   *   table exists.
+   * @param $field
+   *   The name of the field to add. This may be a real field or a formula.
+   * @param $alias
+   *   The alias to create. If not specified, the alias will be $table_$field
+   *   unless $table is NULL. When adding formulae, it is recommended that an
+   *   alias be used.
+   * @param $params
+   *   An array of parameters additional to the field that will control items
+   *   such as aggregation functions and DISTINCT.
+   *
+   * @return $name
+   *   The name that this field can be referred to as. Usually this is the alias.
+   */
+  function add_field($table, $field, $alias = '', $params = array()) {
+    // We can't use any alias in YQL query, so just use the real field name.
+    $alias = $field;
+    
+    // Create a field info array.
+    $field_info = array(
+      'field' => $field,
+      'table' => $table,
+      'alias' => $alias,
+    ) + $params;
+    
+    if (empty($this->fields[$alias])) {
+      $this->fields[$alias] = $field_info;
+    }
+    
+    /*
+    // We check for this specifically because it gets a special alias.
+    if ($table == $this->base_table && $field == $this->base_field && empty($alias)) {
+      $alias = $this->base_field;
+    }
+
+    if ($table && empty($this->table_queue[$table])) {
+      $this->ensure_table($table);
+    }
+
+    if (!$alias && $table) {
+      $alias = $table . '_' . $field;
+    }
+
+    // Make sure an alias is assigned
+    $alias = $alias ? $alias : $field;
+
+    // PostgreSQL truncates aliases to 63 characters: http://drupal.org/node/571548
+
+    // We limit the length of the original alias up to 60 characters
+    // to get a unique alias later if its have duplicates
+    $alias = substr($alias, 0, 60);
+
+    // Create a field info array.
+    $field_info = array(
+      'field' => $field,
+      'table' => $table,
+      'alias' => $alias,
+    ) + $params;
+
+    // Test to see if the field is actually the same or not. Due to
+    // differing parameters changing the aggregation function, we need
+    // to do some automatic alias collision detection:
+    $base = $alias;
+    $counter = 0;
+    while (!empty($this->fields[$alias]) && $this->fields[$alias] != $field_info) {
+      $field_info['alias'] = $alias = $base . '_' . ++$counter;
+    }
+
+    if (empty($this->fields[$alias])) {
+      $this->fields[$alias] = $field_info;
+    }
+
+    return $alias;
+    */
   }
 }
