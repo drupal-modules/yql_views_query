@@ -11,8 +11,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
     $this->api_url = $this->options['api_url'] ? $this->options['api_url'] : 'http://query.yahooapis.com/v1/public/yql';
     $this->api_method = $this->options['api_method'] ? $this->options['api_method'] : 'json';
-    $this->yql_base = $this->options['yql_base'];
-    $this->yql_custom_tables = $this->options['yql_custom_tables'];
+    $this->yql_base_table = $this->options['yql_base_table'];
   }
 
   /**
@@ -23,22 +22,25 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    */
   function condition_query($where = 'where') {
     $clauses = array();
-    if ($this->$where) {
-      foreach ($this->$where as $group => $info) {
-        $clause = implode($info['type'], $info['clauses']);
-        if (count($info['clauses']) > 1) {
-          $clause = $clause;
-        }
-        $clauses[] = $clause;
+    foreach ($this->$where as $group => $info) {
+      if (empty($info['clauses'])) {
+        continue;
       }
 
-      if ($clauses) {
-        if (count($clauses) > 1) {
-          return implode(")" . $this->group_operator , $clauses);
-        }
-        else {
-          return array_shift($clauses);
-        }
+      $clause = implode(") " . $info['type'] . " (", $info['clauses']);
+      if (count($info['clauses']) > 1) {
+        $clause = '(' . $clause . ')';
+      }
+      $clauses[] = $clause;
+    }
+
+    if ($clauses) {
+      $keyword = drupal_strtoupper($where);
+      if (count($clauses) > 1) {
+        return "$keyword (" . implode(")\n    " . $this->group_operator . ' (', array_filter($clauses)) . ")\n";
+      }
+      else {
+        return "$keyword " . array_shift($clauses) . "\n";
       }
     }
     return "";
@@ -85,7 +87,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
     // Add the where clauses
     $where = $this->condition_query();
-    
+
     // Add the field clauses
     $fields = '';
     $fields_array = $this->fields;
@@ -96,12 +98,12 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       $fields .= $field['field'];
     }
     // Add the base table
-    $from = $this->options['yql_base'];
+    $from = $this->yql_base_table;
 
     // Build the query string
-    $query = "select $fields from $from";
+    $query = "SELECT $fields FROM $from";
     if (!empty($where)) {
-      $query = "$query where $where";
+      $query = "$query $where";
     }
 
     // Add table definitions
@@ -127,41 +129,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       }
     }
     return $args;
-  }
-
-  /**
-   * Create a new grouping for the WHERE or HAVING clause.
-   *
-   * @param $type
-   *   Either 'AND' or 'OR'. All items within this group will be added
-   *   to the WHERE clause with this logical operator.
-   * @param $group
-   *   An ID to use for this group. If unspecified, an ID will be generated.
-   * @param $where
-   *   'where' or 'having'.
-   *
-   * @return $group
-   *   The group ID generated.
-   */
-  function set_where_group($type = 'AND', $group = NULL, $where = 'where') {
-    // Set an alias.
-    $groups = &$this->$where;
-
-    if (!isset($group)) {
-      $group = empty($groups) ? 1 : max(array_keys($groups)) + 1;
-    }
-
-    if ($type === 'AND') {
-      $type = ' ';
-    }
-
-    // Create an empty group
-    if (empty($groups[$group])) {
-      $groups[$group] = array('clauses' => array(), 'args' => array());
-    }
-
-    $groups[$group]['type'] = strtoupper($type);
-    return $group;
   }
 
   function add_param($param, $value = '') {
@@ -263,11 +230,23 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
           break;
       }
 
-      if ($results['query']['results']['Artist']) {
-        $view->result = $results['query']['results']['Artist'];
+      if ($results['query']['results']) {
+        // If the base object is specified, use that. Otherwise use the first object.
+        if (!empty($this->options['yql_base_object']) && isset($results['query']['results'][$this->options['yql_base_object']])) {
+          $result_array = $results['query']['results'][$this->options['yql_base_object']];
+        }
+        else {
+          $result_array = current($results['query']['results']);
+        }
+
+        $view->result = $result_array;
+
+        foreach ($view->result as $key => $value) {
+          $view->result[$key] = (object) $value;
+        }
 
         // Save the metadata into the object
-        unset($results['results']);
+        unset($results['query']['results']);
         foreach ($results as $key => $value) {
           $this->$key = $value;
         }
@@ -280,8 +259,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
         //$this->pager['current_page'] = $this->page -1;
       }
     }
-dpm($results);
-dpm($url);
+//dpm($url);
     $view->execute_time = views_microtime() - $start;
   }
 
@@ -292,6 +270,10 @@ dpm($url);
   function option_definition() {
     $options = parent::option_definition();
     $options['api_url'] = array('default' => 'http://query.yahooapis.com/v1/public/yql');
+    $options['api_method'] = array('default' => 'json');
+    $options['yql_base_table'] = array('default' => '');
+    $options['yql_custom_table'] = array('default' => '');
+    $options['yql_base_object'] = array('default' => '');
 
     return $options;
   }
@@ -301,25 +283,27 @@ dpm($url);
       '#type' => 'textfield',
       '#title' => t('Alternate API URL'),
       '#default_value' => $this->options['api_url'],
-      '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine).",
-      array('!identica' => l('Identi.ca', 'http://laconi.ca/trac/wiki/TwitterCompatibleAPI'))),
+      '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine)."),
+      '#required' => TRUE,
     );
 
     $form['api_method'] = array(
       '#type' => 'select',
-      '#title' => t('API Method'),
+      '#title' => t('API method'),
       '#description' => t("The format of the data returned by YQL."),
       '#default_value' => 'json',
       '#options' => array(
         'json' => 'JSON',
       ),
+      '#required' => TRUE,
     );
 
-    $form['yql_base'] = array(
+    $form['yql_base_table'] = array(
       '#type' => 'textfield',
-      '#title' => t('The base table YQL will be querying from.'),
-      '#default_value' => $this->options['yql_base'],
+      '#title' => t('YQL base table'),
+      '#default_value' => $this->options['yql_base_table'],
       '#description' => t("A base table that view will be querying by using YQL to. Example: flickr.photos.recent"),
+      '#required' => TRUE,
     );
 
     // @todo: add validation for custom open table.
@@ -329,8 +313,15 @@ dpm($url);
       '#default_value' => $this->options['yql_custom_tables'],
       '#description' => t("Add custom table into the YQL Query.<br/>Example:" . 'USE \'http://www.datatables.org/delicious/delicious.feeds.popular.xml\' AS delicious.feeds.popular;'),
     );
+
+    $form['yql_base_object'] = array(
+      '#type' => 'textfield',
+      '#title' => t('YQL base object'),
+      '#default_value' => $this->options['yql_base_object'],
+      '#description' => t('The base object YQL will be querying from. If this is left empty, the first object in the result set will be taken as the base object'),
+    );
   }
-  
+
   /**
    * Add a field to the query table, possibly with an alias. This will
    * automatically call ensure_table to make sure the required table
@@ -356,18 +347,20 @@ dpm($url);
   function add_field($table, $field, $alias = '', $params = array()) {
     // We can't use any alias in YQL query, so just use the real field name.
     $alias = $field;
-    
+
     // Create a field info array.
     $field_info = array(
       'field' => $field,
       'table' => $table,
       'alias' => $alias,
     ) + $params;
-    
+
     if (empty($this->fields[$alias])) {
       $this->fields[$alias] = $field_info;
     }
-    
+
+    return $alias;
+
     /*
     // We check for this specifically because it gets a special alias.
     if ($table == $this->base_table && $field == $this->base_field && empty($alias)) {

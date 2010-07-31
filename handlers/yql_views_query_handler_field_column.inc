@@ -18,9 +18,20 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
   }
 
   function render($values) {
-    $value = $values->{$this->field_alias};
+    // Traverse into multi-leveled result that YQL returns (in $values) and output the appropriate value.
+    $field_names = explode('.', $this->field_alias);
+    $field = array_shift($field_names);
+    $value = $values->$field;
+    foreach($field_names as $field) {
+      if (is_array($value)) {
+        $value = $value[$field];
+      }
+    }
+
     $format = is_numeric($this->format) ? $this->format : $values->{$this->aliases['format']};
-    return check_markup($value, $format, FALSE);
+    //if ($value) {
+      return check_markup($value, $format, FALSE);
+    //}
   }
 
   function element_type() {
@@ -30,7 +41,7 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
 
     return 'div';
   }
-  
+
   function option_definition() {
     $options = parent::option_definition();
     $options['field_name'] = array('default' => '');
@@ -46,7 +57,7 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
       '#default_value' => $this->options['field_name'],
     );
   }
-  
+
   /**
    * Called to add the field to a query.
    */
