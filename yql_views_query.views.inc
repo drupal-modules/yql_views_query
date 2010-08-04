@@ -9,8 +9,8 @@ function yql_views_query_views_data() {
   $data['yql']['table']['group'] = t('YQL');
 
   $data['yql']['table']['base'] = array(
-    'title' => t('YQL Query'),
-    'help' => t('Query from YQL endpoint.'),
+    'title' => t('YQL Query: Flexible'),
+    'help' => t('Flexible querying from YQL endpoint.'),
     'query class' => 'yql_query',
   );
 
