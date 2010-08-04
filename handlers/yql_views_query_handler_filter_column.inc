@@ -153,6 +153,7 @@ class yql_views_query_handler_filter_column extends yql_views_query_handler_filt
       '#type' => 'textfield',
       '#title' => 'Field name',
       '#description' => t('The field name in the table that will be used as the filter.'),
+      '#default_value' => $this->options['field_name'],
     );
   }
 
