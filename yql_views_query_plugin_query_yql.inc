@@ -228,8 +228,8 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    * Values to set: $view->result, $view->total_rows, $view->execute_time,
    * $view->pager['current_page'].
    */
-  function execute(&$view) {
-    $query = $view->build_info['query'];
+  function execute(&$view) {    
+    $query = $view->build_info['query'];    
 
     if ($query) {
       $replacements = module_invoke_all('views_query_substitutions', $view);
@@ -243,14 +243,21 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       $start = views_microtime();
 
       $results = drupal_http_request($url, array(), 'GET');
-
-      // @todo fix the failure detection
-      /*
-      if (_twitter_request_failure($results)) {
-        return FALSE;
+      
+      // There is an error in the HTTP request
+      if (isset($results->error)) {        
+        // If the error comes from YQL query, print the YQL error details.
+        if (isset($results->data)) {
+          $yql_error = json_decode($results->data, TRUE);          
+          drupal_set_message("YQL query error: " . $yql_error['error']['description'], 'error');
+        }
+        // Otherwise, the error comes from HTTP request error.
+        else {
+          drupal_set_message("HTTP request error: " . $results->error, 'error');
+        }
+        return;
       }
-      */
-
+      
       switch ($this->api_method) {
         case 'xml':
           // Not supported yet.
@@ -292,6 +299,10 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     }
 //dpm($url);
     $view->execute_time = views_microtime() - $start;
+  }
+  
+  function _yql_query_error($results) {
+    
   }
 
   function add_signature(&$view) {
