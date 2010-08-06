@@ -9,7 +9,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
   function init($base_table = 'yql_ep', $base_field, $options) {
     parent::init($base_table, $base_field, $options);
 
-    $this->api_url = $this->options['api_url'] ? $this->options['api_url'] : 'http://query.yahooapis.com/v1/public/yql';
+    $this->api_url = !empty($this->options['api_url']) ? $this->options['api_url'] : 'http://query.yahooapis.com/v1/public/yql';
     $this->api_method = $this->options['api_method'] ? $this->options['api_method'] : 'json';
     $this->yql_base_table = $this->options['yql_base_table'];
   }
@@ -210,7 +210,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    * Builds the necessary info to execute the query.
    */
   function build(&$view) {
-    $this->init_pager($view);
+    $view->init_pager($view);
     if ($this->pager->use_pager()) {
       $this->pager->set_current_page($view->current_page);
     }
@@ -325,8 +325,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       '#type' => 'textfield',
       '#title' => t('Alternate API URL'),
       '#default_value' => $this->options['api_url'],
-      '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine)."),
-      '#required' => TRUE,
+      '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine)."),      
     );
 
     $form['api_method'] = array(

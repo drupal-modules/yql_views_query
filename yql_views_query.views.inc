@@ -26,6 +26,9 @@ function yql_views_query_views_data() {
     'sort' => array(
       'handler' => 'yql_views_query_handler_sort_column',
     ),
+    'argument' => array(
+      'handler' => 'yql_views_query_handler_argument_column',
+    ),
   );
 
   return $data;
@@ -64,6 +67,13 @@ function yql_views_query_views_handlers() {
         'parent' => 'yql_views_query_handler_sort',
       ),            
       
+      // Argument handlers
+      'yql_views_query_handler_argument' => array(
+        'parent' => 'views_handler_argument',
+      ),
+      'yql_views_query_handler_argument_column' => array(
+        'parent' => 'yql_views_query_handler_argument',
+      ),      
     ),
   );
 }
