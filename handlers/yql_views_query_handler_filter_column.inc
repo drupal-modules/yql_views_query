@@ -128,12 +128,14 @@ class yql_views_query_handler_filter_column extends yql_views_query_handler_filt
   }
 
   function admin_summary() {
+    $output = check_plain($this->options['field_name']);
+
     if (!empty($this->options['exposed'])) {
-      return t('exposed');
+      return $output . ', ' . t('exposed');
     }
 
     $options = $this->operator_options('short');
-    $output = check_plain($options[$this->operator]);
+    $output = $output . ' ' . check_plain($options[$this->operator]);
     if (in_array($this->operator, $this->operator_values(1))) {
       $output .= ' ' . check_plain($this->value);
     }
@@ -154,6 +156,7 @@ class yql_views_query_handler_filter_column extends yql_views_query_handler_filt
       '#title' => 'Field name',
       '#description' => t('The field name in the table that will be used as the filter.'),
       '#default_value' => $this->options['field_name'],
+      '#required' => TRUE,
     );
   }
 

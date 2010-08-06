@@ -55,6 +55,7 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
       '#description' => t('The field name that wants to be included into the view. Example: Rating.AverageRating'),
       '#type' => 'textfield',
       '#default_value' => $this->options['field_name'],
+      '#required' => TRUE,
     );
   }
 
@@ -66,5 +67,13 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
     // Add the field.
     $this->field_alias = $this->query->add_field($this->table_alias, $this->options['field_name']);
     $this->add_additional_fields();
+  }
+
+  /**
+   * Provide extra data to the administration form
+   */
+  function admin_summary() {
+    return $this->label();
+    //return $this->label();
   }
 }

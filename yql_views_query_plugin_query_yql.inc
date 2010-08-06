@@ -104,25 +104,25 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     // Add sort function
     if ($this->orderby) {
       // Only get the first orderby
-      // @todo check whether multiple orderby is supported in YQL            
-      $orderby_field = current($this->orderby);      
+      // @todo check whether multiple orderby is supported in YQL
+      $orderby_field = current($this->orderby);
       $orderby = " | sort(field=\"" . $orderby_field['field'] . "\")";
-      
+
       switch($orderby_field['order']) {
         case 'ASC':
         case 'asc':
           // Do nothing. This is added only for clarity.
           break;
-        
+
         case 'DESC':
         case 'desc':
           // @todo fix this
           $orderby = $orderby . ' | reverse()';
           break;
-        
+
         default:
           break;
-      }            
+      }
     }
 
     // Build the query string
@@ -135,12 +135,12 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     if (!empty($this->options['yql_custom_tables'])) {
       $query = $this->options['yql_custom_tables'] . $query;
     }
-    
+
     // Add sort definitions
     if (!empty($orderby)) {
       $query = $query . $orderby;
     }
-    
+
     return $query;
   }
 
@@ -199,11 +199,11 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
   /**
    * Let modules modify the query just prior to finalizing it.
    */
-  function alter(&$view) {    
+  function alter(&$view) {
     foreach (module_implements('yql_views_query_query_alter') as $module) {
       $function = $module . '_yql_views_query_query_alter';
       $function($view, $this);
-    }    
+    }
   }
 
   /**
@@ -228,8 +228,8 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    * Values to set: $view->result, $view->total_rows, $view->execute_time,
    * $view->pager['current_page'].
    */
-  function execute(&$view) {    
-    $query = $view->build_info['query'];    
+  function execute(&$view) {
+    $query = $view->build_info['query'];
 
     if ($query) {
       $replacements = module_invoke_all('views_query_substitutions', $view);
@@ -243,12 +243,12 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       $start = views_microtime();
 
       $results = drupal_http_request($url, array(), 'GET');
-      
+
       // There is an error in the HTTP request
-      if (isset($results->error)) {        
+      if (isset($results->error)) {
         // If the error comes from YQL query, print the YQL error details.
         if (isset($results->data)) {
-          $yql_error = json_decode($results->data, TRUE);          
+          $yql_error = json_decode($results->data, TRUE);
           drupal_set_message("YQL query error: " . $yql_error['error']['description'], 'error');
         }
         // Otherwise, the error comes from HTTP request error.
@@ -257,7 +257,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
         }
         return;
       }
-      
+
       switch ($this->api_method) {
         case 'xml':
           // Not supported yet.
@@ -300,9 +300,9 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 //dpm($url);
     $view->execute_time = views_microtime() - $start;
   }
-  
+
   function _yql_query_error($results) {
-    
+
   }
 
   function add_signature(&$view) {
@@ -325,7 +325,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       '#type' => 'textfield',
       '#title' => t('Alternate API URL'),
       '#default_value' => $this->options['api_url'],
-      '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine)."),      
+      '#description' => t("The URL YQL will be queried from (default: Yahoo! YQL Engine)."),
     );
 
     $form['api_method'] = array(
@@ -448,7 +448,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     return $alias;
     */
   }
-  
+
   /**
    * Add an ORDER BY clause to the query.
    *
@@ -467,9 +467,9 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    * @param $params
    *   Any params that should be passed through to the add_field.
    */
-  function add_orderby($table, $field, $order, $alias = '', $params = array()) {    
+  function add_orderby($table, $field, $order, $alias = '', $params = array()) {
     // We can't use any alias in YQL query, so just use the real field name.
-    $as = $alias = $field;    
+    $as = $alias = $field;
 
     if ($field) {
       $as = $this->add_field($table, $field, $as, $params);

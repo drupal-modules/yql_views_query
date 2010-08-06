@@ -3,7 +3,7 @@
 class yql_views_query_handler_argument_column extends yql_views_query_handler_argument {
   function init(&$view, $options) {
     parent::init($view, $options);
-    
+
     // Disable this. Only provide support for simple filtering.
     /*
     if (!empty($this->definition['many to one'])) {
@@ -21,7 +21,7 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
 /*
     $options['glossary'] = array('default' => FALSE);
     $options['limit'] = array('default' => 0);
-*/    
+*/
     $options['case'] = array('default' => 'none');
     $options['path_case'] = array('default' => 'none');
     $options['transform_dash'] = array('default' => FALSE);
@@ -103,7 +103,7 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
         '#default_value' => !empty($this->options['require_value']),
       );
     }
-*/    
+*/
   }
 
   /**
@@ -183,7 +183,7 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
 
   function case_transform($string, $option) {
 		global $multibyte;
-		
+
     switch ($this->options[$option]) {
       default:
         return $string;

@@ -13,7 +13,7 @@ function yql_views_query_views_default_views() {
   $view->is_cacheable = FALSE;
   $view->api_version = 3.0-alpha1;
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-  
+
   /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->display->display_options['access']['type'] = 'none';
@@ -110,7 +110,7 @@ function yql_views_query_views_default_views() {
   $handler->display->display_options['filters']['column_1']['expose']['identifier'] = 'column_1';
   $handler->display->display_options['filters']['column_1']['case'] = 1;
   $handler->display->display_options['filters']['column_1']['field_name'] = 'location';
-  
+
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->display->display_options['path'] = 'yql_test_1';

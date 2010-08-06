@@ -58,22 +58,22 @@ function yql_views_query_views_handlers() {
       'yql_views_query_handler_filter_column' => array(
         'parent' => 'yql_views_query_handler_filter',
       ),
-      
+
       // Sort handlers
       'yql_views_query_handler_sort' => array(
         'parent' => 'views_handler_sort',
       ),
       'yql_views_query_handler_sort_column' => array(
         'parent' => 'yql_views_query_handler_sort',
-      ),            
-      
+      ),
+
       // Argument handlers
       'yql_views_query_handler_argument' => array(
         'parent' => 'views_handler_argument',
       ),
       'yql_views_query_handler_argument_column' => array(
         'parent' => 'yql_views_query_handler_argument',
-      ),      
+      ),
     ),
   );
 }

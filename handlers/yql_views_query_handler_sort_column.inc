@@ -14,9 +14,10 @@ class yql_views_query_handler_sort_column extends yql_views_query_handler_sort {
 
     $form['field_name'] = array(
       '#type' => 'textfield',
-      '#title' => t('Field name'),      
+      '#title' => t('Field name'),
       '#description' => t('The field name that the sorting will be done from. NOTE: Only the first field name in the sort handler that will be taken for sorting.'),
       '#default_value' => $this->options['field_name'],
+      '#required' => TRUE,
     );
   }
 
@@ -24,6 +25,6 @@ class yql_views_query_handler_sort_column extends yql_views_query_handler_sort {
    * Called to add the sort to a query.
    */
   function query() {
-    $this->query->add_orderby($this->table_alias, $this->options['field_name'], $this->options['order']);    
+    $this->query->add_orderby($this->table_alias, $this->options['field_name'], $this->options['order']);
   }
 }
