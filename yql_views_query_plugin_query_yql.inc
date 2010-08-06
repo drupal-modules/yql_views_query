@@ -83,10 +83,11 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
     return $params;
 */
+    // @todo add pager query
     $query = '';
 
     // Add the where clauses
-    $where = $this->condition_query();
+    $where = ' ' . $this->condition_query();
 
     // Add the field clauses
     $fields = '';
@@ -100,6 +101,30 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     // Add the base table
     $from = $this->yql_base_table;
 
+    // Add sort function
+    if ($this->orderby) {
+      // Only get the first orderby
+      // @todo check whether multiple orderby is supported in YQL            
+      $orderby_field = current($this->orderby);      
+      $orderby = " | sort(field=\"" . $orderby_field['field'] . "\")";
+      
+      switch($orderby_field['order']) {
+        case 'ASC':
+        case 'asc':
+          // Do nothing. This is added only for clarity.
+          break;
+        
+        case 'DESC':
+        case 'desc':
+          // @todo fix this
+          $orderby = $orderby . ' | reverse()';
+          break;
+        
+        default:
+          break;
+      }            
+    }
+
     // Build the query string
     $query = "SELECT $fields FROM $from";
     if (!empty($where)) {
@@ -110,6 +135,12 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     if (!empty($this->options['yql_custom_tables'])) {
       $query = $this->options['yql_custom_tables'] . $query;
     }
+    
+    // Add sort definitions
+    if (!empty($orderby)) {
+      $query = $query . $orderby;
+    }
+    
     return $query;
   }
 
@@ -168,11 +199,11 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
   /**
    * Let modules modify the query just prior to finalizing it.
    */
-  function alter(&$view) {
-    foreach (module_implements('twitter_views_query_alter') as $module) {
-      $function = $module . '_twitter_views_query_alter';
+  function alter(&$view) {    
+    foreach (module_implements('yql_views_query_query_alter') as $module) {
+      $function = $module . '_yql_views_query_query_alter';
       $function($view, $this);
-    }
+    }    
   }
 
   /**
@@ -406,5 +437,39 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
     return $alias;
     */
+  }
+  
+  /**
+   * Add an ORDER BY clause to the query.
+   *
+   * @param $table
+   *   The table this field is part of. If a formula, enter NULL.
+   * @param $field
+   *   The field or formula to sort on. If already a field, enter NULL
+   *   and put in the alias.
+   * @param $order
+   *   Either ASC or DESC.
+   * @param $alias
+   *   The alias to add the field as. In SQL, all fields in the order by
+   *   must also be in the SELECT portion. If an $alias isn't specified
+   *   one will be generated for from the $field; however, if the
+   *   $field is a formula, this alias will likely fail.
+   * @param $params
+   *   Any params that should be passed through to the add_field.
+   */
+  function add_orderby($table, $field, $order, $alias = '', $params = array()) {    
+    // We can't use any alias in YQL query, so just use the real field name.
+    $as = $alias = $field;    
+
+    if ($field) {
+      $as = $this->add_field($table, $field, $as, $params);
+    }
+
+    $orderby = array(
+      'field' => $as,
+      'order' => $order,
+    );
+
+    $this->orderby[] = $orderby;
   }
 }

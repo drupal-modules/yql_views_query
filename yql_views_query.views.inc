@@ -23,6 +23,9 @@ function yql_views_query_views_data() {
     'filter' => array(
       'handler' => 'yql_views_query_handler_filter_column',
     ),
+    'sort' => array(
+      'handler' => 'yql_views_query_handler_sort_column',
+    ),
   );
 
   return $data;
@@ -52,6 +55,15 @@ function yql_views_query_views_handlers() {
       'yql_views_query_handler_filter_column' => array(
         'parent' => 'yql_views_query_handler_filter',
       ),
+      
+      // Sort handlers
+      'yql_views_query_handler_sort' => array(
+        'parent' => 'views_handler_sort',
+      ),
+      'yql_views_query_handler_sort_column' => array(
+        'parent' => 'yql_views_query_handler_sort',
+      ),            
+      
     ),
   );
 }
