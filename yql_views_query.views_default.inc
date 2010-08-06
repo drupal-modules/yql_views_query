@@ -4,12 +4,9 @@
  * Implementation of hook_views_default_views().
  */
 function yql_views_query_views_default_views() {
-  /*
-   * View 'yql_test_1'
-   */
   $view = new view;
   $view->name = 'yql_test_1';
-  $view->description = 'A sample on what YQL query backend can do.';
+  $view->description = '';
   $view->tag = '';
   $view->view_php = '';
   $view->base_table = 'yql';
@@ -17,7 +14,7 @@ function yql_views_query_views_default_views() {
   $view->api_version = 3.0-alpha1;
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
   
-/* Display: Defaults */
+  /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -106,12 +103,18 @@ function yql_views_query_views_default_views() {
   $handler->display->display_options['filters']['column_1']['table'] = 'yql';
   $handler->display->display_options['filters']['column_1']['field'] = 'column';
   $handler->display->display_options['filters']['column_1']['value'] = 'san fransisco, ca';
+  $handler->display->display_options['filters']['column_1']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['column_1']['expose']['operator'] = 'column_1_op';
+  $handler->display->display_options['filters']['column_1']['expose']['label'] = 'Location';
+  $handler->display->display_options['filters']['column_1']['expose']['use_operator'] = 0;
+  $handler->display->display_options['filters']['column_1']['expose']['identifier'] = 'column_1';
   $handler->display->display_options['filters']['column_1']['case'] = 1;
   $handler->display->display_options['filters']['column_1']['field_name'] = 'location';
   
-/* Display: Page */
+  /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->display->display_options['path'] = 'yql_test_1';
+
   $views[$view->name] = $view;
 
   return $views;
