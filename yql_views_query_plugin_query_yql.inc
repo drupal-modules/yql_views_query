@@ -58,32 +58,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    *   Provide a countquery if this is true, otherwise provide a normal query.
    */
   function query($view, $get_count = FALSE) {
-/*
-    $where = $this->condition_query();
-
-    $params = $this->params;
-    if (!empty($view->pager['items_per_page'])) {
-      $params['rpp'] = $view->pager['items_per_page'] <= 100 ? $view->pager['items_per_page'] : 100;
-    }
-    $params['q'] = $where;
-
-    // Build the full string.
-    $items = array();
-    if ($params) {
-      foreach ($params as $key => $value) {
-        if ($key == 'q') {
-          array_unshift($items, 'q='. urlencode($value));
-        }
-        else {
-          $items[] = $key .'='. urlencode($value);
-        }
-      }
-    }
-    $params = implode('&', $items);
-
-    return $params;
-*/
-    // @todo add pager query
     $query = '';
 
     // Add the where clauses
@@ -104,7 +78,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     // Add sort function
     if ($this->orderby) {
       // Only get the first orderby
-      // @todo check whether multiple orderby is supported in YQL
       $orderby_field = current($this->orderby);
       $orderby = " | sort(field=\"" . $orderby_field['field'] . "\")";
 
@@ -116,7 +89,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
         case 'DESC':
         case 'desc':
-          // @todo fix this
           $orderby = $orderby . ' | reverse()';
           break;
 
@@ -264,18 +236,27 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    */
   function execute(&$view) {
     $query = $view->build_info['query'];
+    $args = $view->build_info['query_args'];
 
     if ($query) {
-      // Alter and set the pager settings before executing
+      // Initialize, alter and set the pager settings before executing
       if ($this->pager->use_pager()) {
+        $this->pager->total_items = $this->options['num_items'];
         $view->total_rows = $this->options['num_items'];
+
+        if (!empty($this->pager->options['offset'])) {
+          $this->pager->total_items -= $this->pager->options['offset'];
+        }
+        $this->pager->update_page_info();
       }
-      if (!empty($this->limit) || !empty($this->offset)) {
-          // We can't have an offset without a limit, so provide an infinite limit (0) instead.
-          $limit  = intval(!empty($this->limit) ? $this->limit : 0);
-          $offset = intval(!empty($this->offset) ? $this->offset : 0);
-          $this->_query_alter_limit($query, $limit, $offset);
-      }
+
+      // We can't have an offset without a limit, so provide an upperbound limit instead.
+      $limit  = intval(!empty($this->limit) ? $this->limit : $this->options['num_items']);
+      $offset = intval(!empty($this->offset) ? $this->offset : 0);
+      $this->_query_alter_limit($query, $limit, $offset);
+
+      // Let the pager modify the query to add limits.
+      $this->pager->pre_execute($query, $args);
 
       $replacements = module_invoke_all('views_query_substitutions', $view);
       $query = str_replace(array_keys($replacements), $replacements, $query);
@@ -333,24 +314,11 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
         foreach ($results as $key => $value) {
           $this->$key = $value;
         }
-/*
-        $this->execute_time = $this->completed_in;
-        $this->items_per_page = $this->results_per_page;
-*/
-
-
-        // Alter the qu
-        // FIXME
-        //$this->total_rows = $this->results_per_page * 2;
-        //$this->pager['current_page'] = $this->page -1;
       }
+      $this->pager->post_execute($view->result);
     }
 //dpm($url);
     $view->execute_time = views_microtime() - $start;
-  }
-
-  function _yql_query_error($results) {
-
   }
 
   function add_signature(&$view) {
@@ -459,52 +427,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     }
 
     return $alias;
-
-    /*
-    // We check for this specifically because it gets a special alias.
-    if ($table == $this->base_table && $field == $this->base_field && empty($alias)) {
-      $alias = $this->base_field;
-    }
-
-    if ($table && empty($this->table_queue[$table])) {
-      $this->ensure_table($table);
-    }
-
-    if (!$alias && $table) {
-      $alias = $table . '_' . $field;
-    }
-
-    // Make sure an alias is assigned
-    $alias = $alias ? $alias : $field;
-
-    // PostgreSQL truncates aliases to 63 characters: http://drupal.org/node/571548
-
-    // We limit the length of the original alias up to 60 characters
-    // to get a unique alias later if its have duplicates
-    $alias = substr($alias, 0, 60);
-
-    // Create a field info array.
-    $field_info = array(
-      'field' => $field,
-      'table' => $table,
-      'alias' => $alias,
-    ) + $params;
-
-    // Test to see if the field is actually the same or not. Due to
-    // differing parameters changing the aggregation function, we need
-    // to do some automatic alias collision detection:
-    $base = $alias;
-    $counter = 0;
-    while (!empty($this->fields[$alias]) && $this->fields[$alias] != $field_info) {
-      $field_info['alias'] = $alias = $base . '_' . ++$counter;
-    }
-
-    if (empty($this->fields[$alias])) {
-      $this->fields[$alias] = $field_info;
-    }
-
-    return $alias;
-    */
   }
 
   /**
