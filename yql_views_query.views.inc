@@ -87,7 +87,7 @@ function yql_views_query_views_plugins() {
       'yql_query' => array(
         'title' => t('YQL Query'),
         'help' => t('Query will be generated and run using YQL.'),
-        'handler' => 'yql_views_query_plugin_query_yql'
+        'handler' => 'yql_views_query_plugin_query_yql',
       ),
     ),
   );

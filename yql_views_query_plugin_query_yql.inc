@@ -211,14 +211,48 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    */
   function build(&$view) {
     $view->init_pager($view);
-    if ($this->pager->use_pager()) {
-      $this->pager->set_current_page($view->current_page);
-    }
+
+    // Let the pager modify the query to add limits.
+    $this->pager->query();
 
     $view->build_info['query'] = $this->query($view);
     //$view->build_info['count_query'] = $this->query($view, TRUE);
-    $view->build_info['count_query'] = 10;
+    $view->build_info['count_query'] = '';
     $view->build_info['query_args'] = $this->get_where_args();
+  }
+
+  /**
+   * Alter the query for paging settings. This should only be called
+   * if the view is using pager.
+   * @param $query
+   *   The query to be altered
+   * @param $limit
+   *   The number of items limit
+   * @param $offset
+   *   The offset from the first item
+   */
+  function _query_alter_limit(&$query, $limit, $offset) {
+    $base_table = $this->options['yql_base_table'];
+    // $total_aggregate_items = $offset + $limit;
+
+    // @todo if there is a better way, fix this!
+    $total_aggregate_items = $this->options['num_items'];
+
+    $query = str_replace($base_table, $base_table . '(0,' . $total_aggregate_items . ')', $query);
+
+    /*
+    // If sort function is specified, the limit and offset should be put
+    // before the sort function
+    if ($sort_found = strpos($query, '|')) {
+      $query = substr($query, 0, $sort_found -1) . "limit $limit offset $offset " . substr($query, $sort_found);
+    }
+    else {
+      $query .= " limit $limit offset $offset";
+    }
+    */
+
+    $current_tail = $offset + $limit;
+    $query = $query . " | truncate(count=$current_tail) | tail(count=$limit)";
   }
 
   /**
@@ -232,6 +266,17 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     $query = $view->build_info['query'];
 
     if ($query) {
+      // Alter and set the pager settings before executing
+      if ($this->pager->use_pager()) {
+        $view->total_rows = $this->options['num_items'];
+      }
+      if (!empty($this->limit) || !empty($this->offset)) {
+          // We can't have an offset without a limit, so provide an infinite limit (0) instead.
+          $limit  = intval(!empty($this->limit) ? $this->limit : 0);
+          $offset = intval(!empty($this->offset) ? $this->offset : 0);
+          $this->_query_alter_limit($query, $limit, $offset);
+      }
+
       $replacements = module_invoke_all('views_query_substitutions', $view);
       $query = str_replace(array_keys($replacements), $replacements, $query);
 
@@ -288,10 +333,13 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
         foreach ($results as $key => $value) {
           $this->$key = $value;
         }
-
+/*
         $this->execute_time = $this->completed_in;
         $this->items_per_page = $this->results_per_page;
+*/
 
+
+        // Alter the qu
         // FIXME
         //$this->total_rows = $this->results_per_page * 2;
         //$this->pager['current_page'] = $this->page -1;
@@ -316,6 +364,8 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     $options['yql_base_table'] = array('default' => '');
     $options['yql_custom_table'] = array('default' => '');
     $options['yql_base_object'] = array('default' => '');
+
+    $options['num_items'] = array('default' => 10);
 
     return $options;
   }
@@ -345,6 +395,14 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       '#default_value' => $this->options['yql_base_table'],
       '#description' => t("A base table that view will be querying by using YQL to. Example: flickr.photos.recent"),
       '#required' => TRUE,
+    );
+
+    $form['num_items'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of items'),
+      '#required' => TRUE,
+      '#description' => t('The number of items to be fetched from the base table. The number must be lesser than the remote limit of the base table, To get the remote limit of a table, see: ') . l('YQL Guide: Paging', 'http://developer.yahoo.com/yql/guide/paging.html') . '. NOTE: This amount of item will be fetched on every page of the view, so it might affect the performance of your site',
+      '#default_value' => $this->options['num_items'],
     );
 
     // @todo: add validation for custom open table.
@@ -482,4 +540,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
 
     $this->orderby[] = $orderby;
   }
+
+
 }
