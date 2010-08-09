@@ -210,7 +210,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     // @todo if there is a better way, fix this!
     $total_aggregate_items = $this->options['num_items'];
 
-    $query = str_replace($base_table, $base_table . '(0,' . $total_aggregate_items . ')', $query);
+    $query = str_replace('FROM ' . $base_table, 'FROM ' . $base_table . '(0,' . $total_aggregate_items . ')', $query);
 
     /*
     // If sort function is specified, the limit and offset should be put
