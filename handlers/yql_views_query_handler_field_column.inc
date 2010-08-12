@@ -28,10 +28,7 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
       }
     }
 
-    $format = is_numeric($this->format) ? $this->format : $values->{$this->aliases['format']};
-    //if ($value) {
-      return check_markup($value, $format, FALSE);
-    //}
+    return $value;
   }
 
   function element_type() {
