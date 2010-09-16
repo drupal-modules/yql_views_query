@@ -2,7 +2,6 @@ $Id$
 INSTALL
 =======
 1. Checkout the latest dev version of Views 3.x (tag: DRUPAL 6--3)
-1. Install Views 3.x patch from http://drupal.org/files/issues/views_621142-16_2.patch
 2. Enable Views 3.x and YQL Views Query
 
 HELP
