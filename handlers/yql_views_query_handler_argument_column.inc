@@ -3,58 +3,22 @@
 class yql_views_query_handler_argument_column extends yql_views_query_handler_argument {
   function init(&$view, $options) {
     parent::init($view, $options);
-
-    // Disable this. Only provide support for simple filtering.
-    /*
-    if (!empty($this->definition['many to one'])) {
-      $this->helper = new views_many_to_one_helper($this);
-
-      // Ensure defaults for these, during summaries and stuff:
-      $this->operator = 'or';
-      $this->value = array();
-    }
-    */
   }
 
   function option_definition() {
     $options = parent::option_definition();
-/*
-    $options['glossary'] = array('default' => FALSE);
-    $options['limit'] = array('default' => 0);
-*/
+
     $options['case'] = array('default' => 'none');
     $options['path_case'] = array('default' => 'none');
     $options['transform_dash'] = array('default' => FALSE);
-
-    /*
-    if (!empty($this->definition['many to one'])) {
-      $options['add_table'] = array('default' => FALSE);
-      $options['require_value'] = array('default' => FALSE);
-    }
-    */
+    $options['field_name'] = array('default' => '');
 
     return $options;
   }
 
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-/*
-    $form['glossary'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Glossary mode'),
-      '#description' => t('Glossary mode applies a limit to the number of characters used in the argument, which allows the summary view to act as a glossary.'),
-      '#default_value' => $this->options['glossary'],
-    );
 
-    $form['limit'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Character limit'),
-      '#description' => t('How many characters of the argument to filter against. If set to 1, all fields starting with the letter in the argument would be matched.'),
-      '#default_value' => $this->options['limit'],
-      '#process' => array('views_process_dependency'),
-      '#dependency' => array('edit-options-glossary' => array(TRUE)),
-    );
-*/
     $form['case'] = array(
       '#type' => 'select',
       '#title' => t('Case'),
@@ -88,59 +52,25 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
       '#title' => t('Transform spaces to dashes in URL'),
       '#default_value' => $this->options['transform_dash'],
     );
-/*
-    if (!empty($this->definition['many to one'])) {
-      $form['add_table'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Allow multiple arguments to work together.'),
-        '#description' => t('If selected, multiple instances of this argument can work together, as though multiple terms were supplied to the same argument. This setting is not compatible with the "Reduce duplicates" setting.'),
-        '#default_value' => !empty($this->options['add_table']),
-      );
 
-      $form['require_value'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Do not display items with no value in summary'),
-        '#default_value' => !empty($this->options['require_value']),
-      );
-    }
-*/
+    $form['field_name'] = array(
+      '#title' => t('Field name'),
+      '#description' => t('The field name that will receive this argument. Example: Rating.AverageRating'),
+      '#type' => 'textfield',
+      '#default_value' => $this->options['field_name'],
+      '#required' => TRUE,
+    );
+
   }
 
   /**
    * Build the summary query based on a string
    */
   function summary_query() {
-    /*
-    if (empty($this->definition['many to one'])) {
-      $this->ensure_my_table();
-    }
-    else {
-      $this->table_alias = $this->helper->summary_join();
-    }
-    */
-
-    if (empty($this->options['glossary'])) {
-      // Add the field.
-      $this->base_alias = $this->name_alias = $this->query->add_field($this->table_alias, $this->real_field);
-      $this->query->set_count_field($this->table_alias, $this->real_field);
-    }
-    else {
-      // Add the field.
-      $formula = $this->get_formula();
-      $this->base_alias = $this->name_alias = $this->query->add_field(NULL, $formula, $this->field . '_truncated');
-      $this->query->set_count_field(NULL, $formula, $this->field, $this->field . '_truncated');
-    }
+    $this->base_alias = $this->name_alias = $this->query->add_field($this->table_alias, $this->real_field);
+    $this->query->set_count_field($this->table_alias, $this->real_field);
 
     return $this->summary_basics(FALSE);
-  }
-
-  /**
-   * Get the formula for this argument.
-   *
-   * $this->ensure_my_table() MUST have been called prior to this.
-   */
-  function get_formula() {
-    return "SUBSTR($this->table_alias.$this->real_field, 1, " . intval($this->options['limit']) . ")";
   }
 
   /**
@@ -152,25 +82,8 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
       $argument = strtr($argument, '-', ' ');
     }
 
-    if (!empty($this->definition['many to one'])) {
-      if (!empty($this->options['glossary'])) {
-        $this->helper->formula = TRUE;
-      }
-      $this->value = array($argument);
-      $this->helper->ensure_my_table();
-      $this->helper->add_filter();
-      return;
-    }
-
-    $this->ensure_my_table();
-    if (empty($this->options['glossary'])) {
-      $field = "$this->table_alias.$this->real_field";
-    }
-    else {
-      $field = $this->get_formula();
-    }
-
-    $this->query->add_where(0, "$field = '%s'", $argument);
+    $field = $this->options['field_name'];
+    $this->query->add_where(0, "$field = '$argument'", $field, $argument);
   }
 
   function summary_argument($data) {
@@ -178,11 +91,12 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
     if (!empty($this->options['transform_dash'])) {
       $value = strtr($value, ' ', '-');
     }
+
     return $value;
   }
 
   function case_transform($string, $option) {
-		global $multibyte;
+    global $multibyte;
 
     switch ($this->options[$option]) {
       default:
@@ -214,5 +128,4 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
   function summary_name($data) {
     return $this->case_transform(parent::summary_name($data), 'case');
   }
-
 }

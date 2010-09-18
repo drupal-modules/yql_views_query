@@ -74,6 +74,5 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
    */
   function admin_summary() {
     return $this->label();
-    //return $this->label();
   }
 }
