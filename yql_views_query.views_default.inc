@@ -10,15 +10,16 @@ function yql_views_query_views_default_views() {
   $view = new view;
   $view->name = 'yql_flickr_photos_recent';
   $view->description = 'YQL Example: List out the latest photos from Flickr with YQL';
-  $view->tag = '';
+  $view->tag = 'YQL demo';
   $view->view_php = '';
   $view->base_table = 'yql';
   $view->is_cacheable = FALSE;
   $view->api_version = 3.0-alpha1;
-  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
 /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->display->display_options['title'] = 'Example YQL Views Page: Flickr Recent Photos';
   $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
@@ -130,16 +131,17 @@ function yql_views_query_views_default_views() {
    */
   $view = new view;
   $view->name = 'yql_sushi';
-  $view->description = 'YQL Example: List out sushi restaurant in a location with YQL';
-  $view->tag = '';
+  $view->description = 'YQL Example: List Out Sushi Restaurant in a Particular Location';
+  $view->tag = 'YQL demo';
   $view->view_php = '';
   $view->base_table = 'yql';
   $view->is_cacheable = FALSE;
   $view->api_version = 3.0-alpha1;
-  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
 /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->display->display_options['title'] = 'Example YQL Views Page: \'Sushi\' Restaurant';
   $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
