@@ -1,5 +1,4 @@
 <?php
-//$Id$
 class yql_views_query_handler_sort_column extends yql_views_query_handler_sort {
   function option_definition() {
     $options = parent::option_definition();

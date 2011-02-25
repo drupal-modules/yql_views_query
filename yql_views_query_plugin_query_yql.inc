@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class yql_views_query_plugin_query_yql extends views_plugin_query {
 

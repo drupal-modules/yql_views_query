@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Integration with the views module to create the new PHP Array views display.
