@@ -1,5 +1,4 @@
 <?php
-// $Id$
 class yql_views_query_handler_argument extends views_handler_argument {
   /**
    * Get the argument's label

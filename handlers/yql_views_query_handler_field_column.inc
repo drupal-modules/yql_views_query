@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class yql_views_query_handler_field_column extends yql_views_query_handler_field {
 

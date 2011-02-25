@@ -1,4 +1,3 @@
-$Id$
 INSTALL
 =======
 1. Checkout the latest dev version of Views 3.x (tag: DRUPAL 6--3)
