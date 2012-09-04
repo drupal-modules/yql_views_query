@@ -190,7 +190,7 @@ class yql_views_query_handler_filter_column extends yql_views_query_handler_filt
         $which = in_array($this->operator, $this->operator_values(1)) ? 'value' : 'none';
       }
       else {
-        $source = 'edit-' . form_clean_id($this->options['expose']['operator']);
+        $source = 'edit-' . drupal_clean_css_identifier($this->options['expose']['operator']);
       }
     }
 
@@ -207,7 +207,7 @@ class yql_views_query_handler_filter_column extends yql_views_query_handler_filt
 
       if ($which == 'all') {
         $form['value'] += array(
-          '#process' => array('views_process_dependency'),
+          '#process' => array('ctools_dependent_process'),
           '#dependency' => array($source => $this->operator_values(1)),
         );
       }
@@ -217,7 +217,7 @@ class yql_views_query_handler_filter_column extends yql_views_query_handler_filt
       // Ensure there is something in the 'value'.
       $form['value'] = array(
         '#type' => 'value',
-        '#value' => NULL
+        '#value' => NULL,
       );
     }
   }
@@ -241,7 +241,8 @@ class yql_views_query_handler_filter_column extends yql_views_query_handler_filt
 
   function op_equal($field) {
     // operator is either = or !=
-    $this->query->add_where($this->options['group'], "$field $this->operator '$this->value'", $field, $this->value);
+    $value = is_array($this->value) ? $this->value[0] : $this->value;
+    $this->query->add_where($this->options['group'], "$field $this->operator '$value'", $field, $this->value);
   }
 
   function op_contains($field) {

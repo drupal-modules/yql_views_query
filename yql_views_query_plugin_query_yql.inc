@@ -25,7 +25,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       if (empty($info['clauses'])) {
         continue;
       }
-
       $clause = implode(") " . $info['type'] . " (", $info['clauses']);
       if (count($info['clauses']) > 1) {
         $clause = '(' . $clause . ')';
@@ -65,7 +64,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     // Add the field clauses
     $fields = '';
     $fields_array = $this->fields;
-    foreach($fields_array as $alias => $field) {
+    foreach ($fields_array as $alias => $field) {
       if (!empty($fields)) {
         $fields .= ', ';
       }
@@ -75,12 +74,12 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     $from = $this->yql_base_table;
 
     // Add sort function
-    if ($this->orderby) {
+    if (isset($this->orderby) && $this->orderby) {
       // Only get the first orderby
       $orderby_field = current($this->orderby);
       $orderby = " | sort(field=\"" . $orderby_field['field'] . "\")";
 
-      switch($orderby_field['order']) {
+      switch ($orderby_field['order']) {
         case 'ASC':
         case 'asc':
           // Do nothing. This is added only for clarity.
@@ -101,7 +100,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     if (!empty($where)) {
       $query = "$query $where";
     }
-
     // Add table definitions
     if (!empty($this->options['yql_custom_tables'])) {
       $query = $this->options['yql_custom_tables'] . $query;
@@ -111,7 +109,6 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     if (!empty($orderby)) {
       $query = $query . $orderby;
     }
-
     return $query;
   }
 
@@ -125,7 +122,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       $args = array_merge($args, $where['args']);
     }
 
-    if ($this->having) {
+    if (isset($this->having) && $this->having) {
       foreach ($this->having as $group => $having) {
         $args = array_merge($args, $having['args']);
       }
@@ -212,15 +209,15 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     $query = str_replace('FROM ' . $base_table, 'FROM ' . $base_table . '(0,' . $total_aggregate_items . ')', $query);
 
     /*
-    // If sort function is specified, the limit and offset should be put
-    // before the sort function
-    if ($sort_found = strpos($query, '|')) {
-      $query = substr($query, 0, $sort_found -1) . "limit $limit offset $offset " . substr($query, $sort_found);
-    }
-    else {
-      $query .= " limit $limit offset $offset";
-    }
-    */
+     // If sort function is specified, the limit and offset should be put
+     // before the sort function
+     if ($sort_found = strpos($query, '|')) {
+     $query = substr($query, 0, $sort_found -1) . "limit $limit offset $offset " . substr($query, $sort_found);
+     }
+     else {
+     $query .= " limit $limit offset $offset";
+     }
+     */
 
     $current_tail = $offset + $limit;
     $query = $query . " | truncate(count=$current_tail) | tail(count=$limit)";
@@ -263,11 +260,11 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       // Encode the query into URL friendly format
       $query = urlencode($query);
       $format_string = $this->api_method == 'json' ? '&format=json' : '&format=xml';
-      $url = $this->api_url .'?q='. $query . $format_string;
+      $url = $this->api_url . '?q=' . $query . $format_string;
 
-      $start = views_microtime();
+      $start = $this->float_microtime();
 
-      $results = drupal_http_request($url, array(), 'GET');
+      $results = drupal_http_request($url, array('headers' => array()));
 
       // There is an error in the HTTP request
       if (isset($results->error)) {
@@ -316,10 +313,15 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
       }
       $this->pager->post_execute($view->result);
     }
-//dpm($url);
-    $view->execute_time = views_microtime() - $start;
+    //dpm($url);
+    $view->execute_time = $this->float_microtime() - $start;
   }
 
+  function float_microtime() {
+    list($usec, $sec) = explode(' ', microtime());
+    return (float) $sec + (float) $usec;
+  }
+  
   function add_signature(&$view) {
     //$view->query->add_field(NULL, "'" . $view->name . ':' . $view->current_display . "'", 'view_name');
   }

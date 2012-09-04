@@ -109,7 +109,8 @@ class yql_views_query_handler_argument_column extends yql_views_query_handler_ar
       case 'ucwords':
         if ($multibyte == UNICODE_MULTIBYTE) {
           return mb_convert_case($string, MB_CASE_TITLE);
-        } else {
+        }
+        else {
           return ucwords($string);
         }
     }

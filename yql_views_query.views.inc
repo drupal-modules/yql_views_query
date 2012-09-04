@@ -4,6 +4,10 @@
  * Implements hook_views_data
  */
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function yql_views_query_views_data() {
   $data['yql']['table']['group'] = t('YQL');
 
@@ -34,7 +38,7 @@ function yql_views_query_views_data() {
 }
 
 /**
- * Implementation of hook_views_handlers().
+ * Implements hook_views_handlers().
  */
 function yql_views_query_views_handlers() {
   return array(
@@ -49,7 +53,6 @@ function yql_views_query_views_handlers() {
       'yql_views_query_handler_field_column' => array(
         'parent' => 'yql_views_query_handler_field',
       ),
-
       // Filters
       'yql_views_query_handler_filter' => array(
         'parent' => 'views_handler_filter',
@@ -57,7 +60,6 @@ function yql_views_query_views_handlers() {
       'yql_views_query_handler_filter_column' => array(
         'parent' => 'yql_views_query_handler_filter',
       ),
-
       // Sort handlers
       'yql_views_query_handler_sort' => array(
         'parent' => 'views_handler_sort',
@@ -65,7 +67,6 @@ function yql_views_query_views_handlers() {
       'yql_views_query_handler_sort_column' => array(
         'parent' => 'yql_views_query_handler_sort',
       ),
-
       // Argument handlers
       'yql_views_query_handler_argument' => array(
         'parent' => 'views_handler_argument',
@@ -78,7 +79,7 @@ function yql_views_query_views_handlers() {
 }
 
 /**
- * Implementation of hook_views_plugins().
+ * Implements hook_views_plugins().
  */
 function yql_views_query_views_plugins() {
   return array(
