@@ -9,12 +9,12 @@ function yql_views_query_views_default_views() {
   $view = new view;
   $view->name = 'yql_flickr_photos_recent';
   $view->description = 'YQL Example: List out the latest photos from Flickr with YQL';
-  $view->tag = '';
+  $view->tag = 'YQL demo';
   $view->view_php = '';
   $view->base_table = 'yql';
   $view->is_cacheable = FALSE;
   $view->api_version = 3.0-alpha1;
-  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
 /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
@@ -130,12 +130,12 @@ function yql_views_query_views_default_views() {
   $view = new view;
   $view->name = 'yql_sushi';
   $view->description = 'YQL Example: List out sushi restaurant in a location with YQL';
-  $view->tag = '';
+  $view->tag = 'YQL demo';
   $view->view_php = '';
   $view->base_table = 'yql';
   $view->is_cacheable = FALSE;
   $view->api_version = 3.0-alpha1;
-  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
 /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
@@ -239,6 +239,162 @@ function yql_views_query_views_default_views() {
 /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->display->display_options['path'] = 'yql_sushi';
+  $views[$view->name] = $view;
+
+
+  /*
+   * View 'yql_tables'
+   */
+  $view = new view;
+  $view->name = 'yql_tables';
+  $view->description = 'YQL Example: A demonstration list with some tables accessible with YQL, and some help text';
+  $view->tag = 'YQL demo';
+  $view->view_php = '';
+  $view->base_table = 'yql';
+  $view->is_cacheable = FALSE;
+  $view->api_version = '3.0-alpha1';
+  $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: YQL tables */
+  $handler = $view->new_display('default', 'YQL tables', 'default');
+  $handler->display->display_options['title'] = 'Example YQL Views page';
+  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['api_url'] = '';
+  $handler->display->display_options['query']['options']['yql_base_table'] = 'yql.tables';
+  $handler->display->display_options['query']['options']['num_items'] = '50';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['style_plugin'] = 'table';
+  $handler->display->display_options['style_options']['columns'] = array(
+    'counter' => 'counter',
+    'column_3' => 'column_3',
+    'column' => 'column',
+  );
+  $handler->display->display_options['style_options']['default'] = '-1';
+  $handler->display->display_options['style_options']['info'] = array(
+    'counter' => array(
+      'align' => '',
+      'separator' => '',
+    ),
+    'column_3' => array(
+      'align' => '',
+      'separator' => '',
+    ),
+    'column' => array(
+      'align' => '',
+      'separator' => '',
+    ),
+  );
+  $handler->display->display_options['style_options']['override'] = 1;
+  $handler->display->display_options['style_options']['sticky'] = 0;
+  /* Header: Global: Text area */
+  $handler->display->display_options['header']['area']['id'] = 'area';
+  $handler->display->display_options['header']['area']['table'] = 'views';
+  $handler->display->display_options['header']['area']['field'] = 'area';
+  $handler->display->display_options['header']['area']['label'] = 'Help text';
+  $handler->display->display_options['header']['area']['empty'] = TRUE;
+  $handler->display->display_options['header']['area']['content'] = 'This view displays the first 50 of the tables available with Yahoo! Query Language. The full list can be viewed in <a href="http://developer.yahoo.com/yql/console/?env=http://datatables.org/alltables.env">the YQL Console at the Yahoo! Developer Network</a>.';
+  $handler->display->display_options['header']['area']['format'] = '1';
+  /* Footer: Global: Text area */
+  $handler->display->display_options['footer']['area']['id'] = 'area';
+  $handler->display->display_options['footer']['area']['table'] = 'views';
+  $handler->display->display_options['footer']['area']['field'] = 'area';
+  $handler->display->display_options['footer']['area']['label'] = 'More help text';
+  $handler->display->display_options['footer']['area']['empty'] = TRUE;
+  $handler->display->display_options['footer']['area']['content'] = 'Note that many YQL statements use different source tables than the default YQL table. These source tables can be viewed in <a href="http://developer.yahoo.com/yql/console/?env=http://datatables.org/alltables.env">the YQL console at the Yahoo! developer network</a>. Any non-standard source table should be entered in the <em>query settings</em> (under <em>advanced settings</em>) using the form <strong>USE \'http://www.datatables.org/arxiv/arxiv.search.xml\' AS arxiv.search;</strong>.
+
+  Any queries should be added as filters, on the form <strong>where <em>field name</em> = <em>value</em></strong>.';
+  $handler->display->display_options['footer']['area']['format'] = '1';
+  /* Field: YQL: Column */
+  $handler->display->display_options['fields']['column']['id'] = 'column';
+  $handler->display->display_options['fields']['column']['table'] = 'yql';
+  $handler->display->display_options['fields']['column']['field'] = 'column';
+  $handler->display->display_options['fields']['column']['label'] = 'Table name';
+  $handler->display->display_options['fields']['column']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['column']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['column']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['column']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['column']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['column']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['column']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['column']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['column']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['column']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['column']['field_name'] = 'name';
+  /* Field: YQL: Column */
+  $handler->display->display_options['fields']['column_1']['id'] = 'column_1';
+  $handler->display->display_options['fields']['column_1']['table'] = 'yql';
+  $handler->display->display_options['fields']['column_1']['field'] = 'column';
+  $handler->display->display_options['fields']['column_1']['label'] = 'Access';
+  $handler->display->display_options['fields']['column_1']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['column_1']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['column_1']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['column_1']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['column_1']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['column_1']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['column_1']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['column_1']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['column_1']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['column_1']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['column_1']['field_name'] = 'security';
+  /* Field: YQL: Column */
+  $handler->display->display_options['fields']['column_2']['id'] = 'column_2';
+  $handler->display->display_options['fields']['column_2']['table'] = 'yql';
+  $handler->display->display_options['fields']['column_2']['field'] = 'column';
+  $handler->display->display_options['fields']['column_2']['label'] = '';
+  $handler->display->display_options['fields']['column_2']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['column_2']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['column_2']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['column_2']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['column_2']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['column_2']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['column_2']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['column_2']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['column_2']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['column_2']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['column_2']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['column_2']['field_name'] = 'meta.documentation';
+  /* Field: YQL: Column */
+  $handler->display->display_options['fields']['column_3']['id'] = 'column_3';
+  $handler->display->display_options['fields']['column_3']['table'] = 'yql';
+  $handler->display->display_options['fields']['column_3']['field'] = 'column';
+  $handler->display->display_options['fields']['column_3']['label'] = '';
+  $handler->display->display_options['fields']['column_3']['alter']['alter_text'] = 1;
+  $handler->display->display_options['fields']['column_3']['alter']['text'] = 'Description: [column_3]<br />
+  Documentation link: [column_2]';
+  $handler->display->display_options['fields']['column_3']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['column_3']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['column_3']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['column_3']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['column_3']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['column_3']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['column_3']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['column_3']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['column_3']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['column_3']['field_name'] = 'description';
+  /* Field: YQL: Column */
+  $handler->display->display_options['fields']['column_4']['id'] = 'column_4';
+  $handler->display->display_options['fields']['column_4']['table'] = 'yql';
+  $handler->display->display_options['fields']['column_4']['field'] = 'column';
+  $handler->display->display_options['fields']['column_4']['label'] = 'Sample query';
+  $handler->display->display_options['fields']['column_4']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['column_4']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['column_4']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['column_4']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['column_4']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['column_4']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['column_4']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['column_4']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['column_4']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['column_4']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['column_4']['field_name'] = 'sampleQuery';
+
+  /* Display: YQL tables (Page) */
+  $handler = $view->new_display('page', 'YQL tables (Page)', 'page_1');
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  $handler->display->display_options['path'] = 'yql_tables';
   $views[$view->name] = $view;
 
   return $views;
