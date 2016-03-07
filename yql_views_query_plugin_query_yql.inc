@@ -331,7 +331,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
     $options['api_url'] = array('default' => 'http://query.yahooapis.com/v1/public/yql');
     $options['api_method'] = array('default' => 'json');
     $options['yql_base_table'] = array('default' => '');
-    $options['yql_custom_table'] = array('default' => '');
+    $options['yql_custom_tables'] = array('default' => '');
     $options['yql_base_object'] = array('default' => '');
 
     $options['num_items'] = array('default' => 10);
