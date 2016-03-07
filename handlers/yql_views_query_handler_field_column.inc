@@ -31,7 +31,7 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
     //}
   }
 
-  function element_type() {
+  function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {
     if (isset($this->definition['element type'])) {
       return $this->definition['element type'];
     }

@@ -55,7 +55,7 @@ class yql_views_query_plugin_query_yql extends views_plugin_query {
    * @param $get_count
    *   Provide a countquery if this is true, otherwise provide a normal query.
    */
-  function query($view, $get_count = FALSE) {
+  function query($get_count = FALSE) {
     $query = '';
 
     // Add the where clauses
