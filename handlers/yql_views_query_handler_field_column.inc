@@ -16,16 +16,15 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
   }
 
   function render($values) {
-    // Traverse into multi-leveled result that YQL returns (in $values) and output the appropriate value.
+    // Parse YQL result and output the appropriate value.
     $field_names = explode('.', $this->field_alias);
-    $field = array_shift($field_names);
-    $value = $values->$field;
-    foreach ($field_names as $field) {
-      if (is_array($value)) {
-        $value = $value[$field];
-      }
+    // Traverse into multi-leveled array to get value based on array of key names.
+    // Credits: http://stackoverflow.com/q/28616752/55075
+    $value = (array)$values;
+    while ($key = array_shift($field_names)) {
+      $value = $value[$key];
     }
-
+    $value = is_string($value) ? $value : $value['content'];
     $format = isset($this->format) ? $this->format : filter_fallback_format();
     //if ($value) {
     return check_markup($value, $format);
