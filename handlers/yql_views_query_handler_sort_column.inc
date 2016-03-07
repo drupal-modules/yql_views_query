@@ -42,8 +42,8 @@ class yql_views_query_handler_sort_column extends yql_views_query_handler_sort {
       default:
         return $field . ' ' . t('asc');
         break;
-      case 'DESC';
-      case 'desc';
+      case 'DESC':
+      case 'desc':
         return $field . ' ' . t('desc');
         break;
     }

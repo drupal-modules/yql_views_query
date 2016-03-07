@@ -1,6 +1,6 @@
 INSTALL
 =======
-1. Checkout the latest dev version of Views 3.x (tag: DRUPAL 6--3)
+1. Checkout the latest dev version of Views 3.x
 2. Enable Views 3.x and YQL Views Query
 
 HELP

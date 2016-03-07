@@ -7,30 +7,31 @@ class yql_views_query_handler_field_column extends yql_views_query_handler_field
    */
   function construct() {
     parent::construct();
-
-    $this->format = $this->definition['format'] ? $this->definition['format'] : FILTER_FORMAT_DEFAULT;
+    $this->format = isset($this->definition['format']) ? $this->format : NULL;
 
     $this->additional_fields = array();
-    if (!is_numeric($this->format)) {
-      $this->additional_fields['format'] = array('field' => $this->format);
+    if (is_array($this->format)) {
+      $this->additional_fields['format'] = $this->format;
     }
   }
 
   function render($values) {
-    // Traverse into multi-leveled result that YQL returns (in $values) and output the appropriate value.
+    // Parse YQL result and output the appropriate value.
     $field_names = explode('.', $this->field_alias);
-    $field = array_shift($field_names);
-    $value = $values->$field;
-    foreach($field_names as $field) {
-      if (is_array($value)) {
-        $value = $value[$field];
-      }
+    // Traverse into multi-leveled array to get value based on array of key names.
+    // Credits: http://stackoverflow.com/q/28616752/55075
+    $value = (array)$values;
+    while ($key = array_shift($field_names)) {
+      $value = $value[$key];
     }
-
-    return $value;
+    $value = is_string($value) ? $value : $value['content'];
+    $format = isset($this->format) ? $this->format : filter_fallback_format();
+    //if ($value) {
+    return check_markup($value, $format);
+    //}
   }
 
-  function element_type() {
+  function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {
     if (isset($this->definition['element type'])) {
       return $this->definition['element type'];
     }

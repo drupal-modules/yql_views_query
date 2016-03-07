@@ -1,6 +1,6 @@
 <?php
 /**
- * Implementation of hook_views_default_views().
+ * Implements hook_views_default_views().
  */
 function yql_views_query_views_default_views() {
   /*
@@ -13,10 +13,10 @@ function yql_views_query_views_default_views() {
   $view->view_php = '';
   $view->base_table = 'yql';
   $view->is_cacheable = FALSE;
-  $view->api_version = 3.0-alpha1;
+  $view->api_version = '3.0-alpha1';
   $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
-/* Display: Defaults */
+  /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->display->display_options['title'] = 'Example YQL Views Page: Flickr Recent Photos';
   $handler->display->display_options['access']['type'] = 'none';
@@ -120,7 +120,7 @@ function yql_views_query_views_default_views() {
   $handler->display->display_options['fields']['nothing']['hide_empty'] = 0;
   $handler->display->display_options['fields']['nothing']['empty_zero'] = 0;
 
-/* Display: Page */
+  /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->display->display_options['path'] = 'yql_flickr_photos_recent';
   $views[$view->name] = $view;
@@ -135,10 +135,10 @@ function yql_views_query_views_default_views() {
   $view->view_php = '';
   $view->base_table = 'yql';
   $view->is_cacheable = FALSE;
-  $view->api_version = 3.0-alpha1;
+  $view->api_version = '3.0-alpha1';
   $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
-/* Display: Defaults */
+  /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->display->display_options['title'] = 'Example YQL Views Page: \'Sushi\' Restaurant';
   $handler->display->display_options['access']['type'] = 'none';
@@ -238,7 +238,7 @@ function yql_views_query_views_default_views() {
   $handler->display->display_options['filters']['column_1']['case'] = 1;
   $handler->display->display_options['filters']['column_1']['field_name'] = 'location';
 
-/* Display: Page */
+  /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->display->display_options['path'] = 'yql_sushi';
   $views[$view->name] = $view;
