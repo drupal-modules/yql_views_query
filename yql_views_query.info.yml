@@ -1,0 +1,7 @@
+name: 'YQL Views Query Backend'
+description: 'Enables Views to query Yahoo Query Language (YQL).'
+package: Views
+dependencies:
+  - views
+core: 8.x
+type: module
