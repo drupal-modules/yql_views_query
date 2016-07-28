@@ -11,9 +11,9 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @ingroup views_argument_handlers
  *
- * @ViewsArgument("yql_views_query_handler_argument_column")
+ * @ViewsArgument("column")
  */
-class yql_views_query_handler_argument_column extends ArgumentPluginBase 
+class Column extends ArgumentPluginBase 
 {
     function init(&$view, $options) 
     {

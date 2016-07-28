@@ -4,15 +4,16 @@ namespace Drupal\yql_views_query\Plugin\views\filter;
 
 use Drupal\views\Annotation\ViewsFilter;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
-
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Component\Utility\SafeMarkup;
 /**
  * Field handler for search snippet.
  *
  * @ingroup views_filter_handlers
  *
- * @ViewsFilter("yql_views_query_handler_filter_column")
+ * @ViewsFilter("column")
  */
-class yql_views_query_handler_filter_column extends FilterPluginBase 
+class Column extends FilterPluginBase 
 {
     var $no_single = TRUE;
 
@@ -139,23 +140,23 @@ class yql_views_query_handler_filter_column extends FilterPluginBase
 
     function adminSummary() 
     {
-      $output = check_plain($this->options['field_name']);
+      $output = SafeMarkup::checkPlain($this->options['field_name']);
 
         if (!empty($this->options['exposed'])) 
         {
             return $output . ', ' . t('exposed');
         }
 
-        $options = $this->operator_options('short');
-        $output = $output . ' ' . check_plain($options[$this->operator]);
+        $options = $this->operatorOptions('short');
+        $output = $output . ' ' . SafeMarkup::checkPlain($options[$this->operator]);
         if (in_array($this->operator, $this->operator_values(1))) 
         {
-            $output .= ' ' . check_plain($this->value);
+            $output .= ' ' . SafeMarkup::checkPlain($this->value);
         }
         return $output;
     }
 
-    function buildOptionsForm(&$form, FormStateInterface &$form_state) 
+    public function buildOptionsForm(&$form, FormStateInterface $form_state) 
     {
         parent::buildOptionsForm($form, $form_state);
         
@@ -192,61 +193,13 @@ class yql_views_query_handler_filter_column extends FilterPluginBase
     /**
      * Provide a simple textfield for equality
      */
-    function valueForm(&$form, FormStateInterface &$form_state) 
-    {
-        // We have to make some choices when creating this as an exposed
-        // filter form. For example, if the operator is locked and thus
-        // not rendered, we can't render dependencies; instead we only
-        // render the form items we need.
-        $which = 'all';
-        if (!empty($form['operator'])) 
-        {
-            $source = ($form['operator']['#type'] == 'radios') ? 'radio:options[operator]' : 'edit-options-operator';
-        }
-        if (!empty($form_state['exposed'])) {
-            $identifier = $this->options['expose']['identifier'];
-
-            if (empty($this->options['expose']['use_operator']) || empty($this->options['expose']['operator'])) 
-            {
-                // exposed and locked.
-                $which = in_array($this->operator, $this->operator_values(1)) ? 'value' : 'none';
-            }
-            else 
-            {
-                $source = 'edit-' . drupal_clean_css_identifier($this->options['expose']['operator']);
-            }
-        }
-
-        if ($which == 'all' || $which == 'value') 
-        {
-            $form['value'] = array(
-                '#type' => 'textfield',
-                '#title' => t('Value'),
-                '#size' => 30,
-                '#default_value' => $this->value,
-            );
-            if (!empty($form_state['exposed']) && !isset($form_state['input'][$identifier])) 
-            {
-                $form_state['input'][$identifier] = $this->value;
-            }
-
-            if ($which == 'all') 
-            {
-                $form['value'] += array(
-                    '#process' => array('ctools_dependent_process'),
-                    '#dependency' => array($source => $this->operator_values(1)),
-                );
-            }
-        }
-
-        if (!isset($form['value'])) 
-        {
-            // Ensure there is something in the 'value'.
-            $form['value'] = array(
-                '#type' => 'value',
-                '#value' => NULL,
-            );
-        }
+    protected function valueForm(&$form, FormStateInterface $form_state)
+    {       
+        $form['value'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Value'),
+            '#size' => 30
+        );           
     }
 
     /**

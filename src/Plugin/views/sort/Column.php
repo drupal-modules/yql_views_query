@@ -11,9 +11,9 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @ingroup views_sort_handlers
  *
- * @ViewsSort("yql_views_query_handler_sort_column")
+ * @ViewsSort("column")
  */
-class yql_views_query_handler_sort_column extends SortPluginBase 
+class Column extends SortPluginBase 
 {
     function defineOptions() 
     {
@@ -24,7 +24,7 @@ class yql_views_query_handler_sort_column extends SortPluginBase
       return $options;
     }
 
-    function buildOptionsForm(&$form, FormStateInterface &$form_state) 
+    public function buildOptionsForm(&$form, FormStateInterface $form_state)
     {
         parent::buildOptionsForm($form, $form_state);
 

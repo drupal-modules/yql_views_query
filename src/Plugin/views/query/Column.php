@@ -4,26 +4,33 @@ namespace Drupal\yql_views_query\Plugin\views\query;
 
 use Drupal\views\Annotation\ViewsQuery;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Plugin\views\display\DisplayPluginBase;
+use Drupal;
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Form\FormStateInterface;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Field handler for search snippet.
  *
- * @ingroup views_query_handlers
- *
- * @ViewsQuery("yql_views_query_handler_query_column")
+ * @ViewsQuery(
+ *   id = "column"
+ * )
  */
-class yql_views_query_handler_query_column extends QueryPluginBase {
+class Column extends QueryPluginBase {
 
   /**
    * Constructor; Create the basic query object and fill with default values.
    */
-    function init($base_table = 'yql_ep', $base_field, $options) 
+    function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) 
     {
-        parent::init($base_table, $base_field, $options);
+        parent::init($view, $display, $options);
 
         $this->api_url = !empty($this->options['api_url']) ? $this->options['api_url'] : 'http://query.yahooapis.com/v1/public/yql';
-        $this->api_method = $this->options['api_method'] ? $this->options['api_method'] : 'json';
-        $this->yql_base_table = $this->options['yql_base_table'];
+        $this->api_method = isset($this->options['api_method']) ? $this->options['api_method'] : 'json';
+        $this->yql_base_table = isset($this->options['yql_base_table']) ? $this->options['yql_base_table'] : '';
     }
 
   /**
@@ -50,7 +57,7 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
 
         if ($clauses) 
         {
-            $keyword = drupal_strtoupper($where);
+            $keyword = Unicode::strtoupper($where);
             if (count($clauses) > 1) 
             {
                 return "$keyword (" . implode(")\n    " . $this->group_operator . ' (', array_filter($clauses)) . ")\n";
@@ -202,9 +209,9 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
     /**
      * Let modules modify the query just prior to finalizing it.
      */
-    function alter(&$view) 
+    public function alter(ViewExecutable $view) 
     {
-        foreach (module_implements('yql_views_query_query_alter') as $module) 
+        foreach (Drupal::moduleHandler()->getImplementations('yql_views_query_query_alter') as $module) 
         {
             $function = $module . '_yql_views_query_query_alter';
             $function($view, $this);
@@ -214,12 +221,16 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
     /**
      * Builds the necessary info to execute the query.
      */
-    function build(&$view) 
+    public function build(ViewExecutable $view)
     {
-        $view->init_pager($view);
+        $view->initPager($view);
+        
+        $this->pager = $view->getPager();
 
-        // Let the pager modify the query to add limits.
-        $this->pager->query();
+        if($this->pager) 
+        {
+            $this->pager->query();
+        }
 
         $view->build_info['query'] = $this->query($view);
         //$view->build_info['count_query'] = $this->query($view, TRUE);
@@ -269,14 +280,15 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
      * Values to set: $view->result, $view->total_rows, $view->execute_time,
      * $view->pager['current_page'].
      */
-    function execute(&$view) {
-      $query = $view->build_info['query'];
-      $args = $view->build_info['query_args'];
+    public function execute(ViewExecutable $view) 
+    {
+        $query = $view->build_info['query'];
+        $args = $view->build_info['query_args'];
 
         if ($query) 
         {
             // Initialize, alter and set the pager settings before executing
-            if ($this->pager->use_pager()) 
+            if ($this->pager && $this->pager->usePager()) 
             {
                 $this->pager->total_items = $this->options['num_items'];
                 $view->total_rows = $this->options['num_items'];
@@ -285,7 +297,7 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
                 {
                     $this->pager->total_items -= $this->pager->options['offset'];
                 }
-                $this->pager->update_page_info();
+                $this->pager->updatePageInfo();
             }
 
             // We can't have an offset without a limit, so provide an upperbound limit instead.
@@ -294,7 +306,7 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
             $this->_query_alter_limit($query, $limit, $offset);
 
             // Let the pager modify the query to add limits.
-            $this->pager->pre_execute($query, $args);
+            $this->pager->preExecute($query, $args);
 
             $replacements = \Drupal::moduleHandler()->invokeAll('views_query_substitutions', [$view]);
             $query = str_replace(array_keys($replacements), $replacements, $query);
@@ -306,31 +318,27 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
 
             $start = $this->float_microtime();
 
-            // @FIXME
-            // drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
-            // with Drupal core.
-            // 
-            // 
-            // @see https://www.drupal.org/node/1862446
-            // @see http://docs.guzzlephp.org/en/latest
-            // $results = drupal_http_request($url, array('headers' => array()));
-
-
-            // There is an error in the HTTP request
-            if (isset($results->error)) 
+            try 
             {
-                // If the error comes from YQL query, print the YQL error details.
-                if (isset($results->data)) 
+                $client = \Drupal::httpClient();
+                $results = $client->get($url);               
+            }
+            catch (BadResponseException $exception) 
+            {
+                $response = $exception->getResponse();
+                drupal_set_message(t('Failed to fetch file due to HTTP error "%error"', array('%error' => $response->getStatusCode() . ' ' . $response->getReasonPhrase())), 'error');
+                
+                if ($response->getBody())
                 {
-                    $yql_error = json_decode($results->data, TRUE);
+                    $yql_error = json_decode($response->getBody(), TRUE);
                     drupal_set_message("YQL query error: " . $yql_error['error']['description'], 'error');
                 }
-                // Otherwise, the error comes from HTTP request error.
-                else 
-                {
-                    drupal_set_message("HTTP request error: " . $results->error, 'error');
-                }
                 
+                return;
+            }
+            catch (RequestException $exception) 
+            {
+                drupal_set_message(t('Failed to fetch file due to error "%error"', array('%error' => $exception->getMessage())), 'error');
                 return;
             }
 
@@ -341,10 +349,10 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
                     return;
                 case 'json':
                 default:
-                    $results = json_decode($results->data, TRUE);
+                    $results = json_decode($results->getBody(), TRUE);
                 break;
             }
-
+            
             if ($results['query']['results']) 
             {
                 // If the base object is specified, use that. Otherwise use the first object.
@@ -371,8 +379,12 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
                     $this->$key = $value;
                 }
             }
+            else
+            {
+                drupal_set_message('No results', 'error');                
+            }
             
-            $this->pager->post_execute($view->result);
+            $this->pager->postExecute($view->result);
         }
         //dpm($url);
         $view->execute_time = $this->float_microtime() - $start;
@@ -389,9 +401,9 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
         //$view->query->add_field(NULL, "'" . $view->name . ':' . $view->current_display . "'", 'view_name');
     }
 
-    function option_definition() 
+    function defineOptions() 
     {
-        $options = parent::option_definition();
+        $options = parent::defineOptions();
         $options['api_url'] = array('default' => 'http://query.yahooapis.com/v1/public/yql');
         $options['api_method'] = array('default' => 'json');
         $options['yql_base_table'] = array('default' => '');
@@ -403,7 +415,7 @@ class yql_views_query_handler_query_column extends QueryPluginBase {
         return $options;
     }
 
-    function options_form(&$form, &$form_state) 
+    function buildOptionsForm(&$form, FormStateInterface $form_state) 
     {
         $form['api_url'] = array(
           '#type' => 'textfield',
