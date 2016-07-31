@@ -15,11 +15,6 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class Column extends ArgumentPluginBase 
 {
-    function init(&$view, $options) 
-    {
-        parent::init($view, $options);
-    }
-
     function defineOptions () 
     {
         $options = parent::defineOptions();

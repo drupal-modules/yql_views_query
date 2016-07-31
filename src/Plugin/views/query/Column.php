@@ -11,6 +11,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\RequestException;
+use Drupal\views\ResultRow;
 
 /**
  * Field handler for search snippet.
@@ -322,6 +323,8 @@ class Column extends QueryPluginBase {
             {
                 $client = \Drupal::httpClient();
                 $results = $client->get($url);               
+                
+                
             }
             catch (BadResponseException $exception) 
             {
@@ -331,7 +334,7 @@ class Column extends QueryPluginBase {
                 if ($response->getBody())
                 {
                     $yql_error = json_decode($response->getBody(), TRUE);
-                    drupal_set_message("YQL query error: " . $yql_error['error']['description'], 'error');
+                    drupal_set_message("YQL query error: " . $yql_error['error']['description'], 'error');                    
                 }
                 
                 return;
@@ -368,8 +371,8 @@ class Column extends QueryPluginBase {
                 $view->result = $result_array;
 
                 foreach ($view->result as $key => $value) 
-                {
-                    $view->result[$key] = (object) $value;
+                {                    
+                    $view->result[$key] = new ResultRow($value);
                 }
 
                 // Save the metadata into the object
@@ -383,6 +386,8 @@ class Column extends QueryPluginBase {
             {
                 drupal_set_message('No results', 'error');                
             }
+            
+            drupal_set_message("SQL: " . urldecode($query), 'status');
             
             $this->pager->postExecute($view->result);
         }
